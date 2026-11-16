@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Copy, CheckCheck } from 'lucide-react';
 import { classNames } from '../../utils/formatters';
-import type { ChatMessage, FileReference } from '../../types';
+import type { ChatMessage } from '../../types';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -45,31 +45,6 @@ export const MessageList: React.FC<MessageListProps> = ({
       .replace(/'/g, '&#039;');
   };
 
-  const renderContent = (content: string) => {
-    const parts = content.split(/```(\w+)?\n([\s\S]*?)```/);
-    return (
-      <div className="prose prose-invert max-w-none text-slate-300">
-        {parts.map((part, i) => {
-          if (i % 3 === 0) {
-            return <div key={i} dangerouslySetInnerHTML={{ __html: part.replace(/\n/g, '<br>') }} />;
-          } else if (i % 3 === 1) {
-            return null;
-          } else {
-            const lang = parts[i - 1] || 'plaintext';
-            return (
-              <CodeBlock
-                key={i}
-                code={part}
-                language={lang}
-                onCopy={onCopyCode}
-              />
-            );
-          }
-        })}
-      </div>
-    );
-  };
-
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-6" ref={messagesEndRef}>
       {messages.map((message, index) => (
@@ -77,7 +52,6 @@ export const MessageList: React.FC<MessageListProps> = ({
           key={`${message.role}-${index}`}
           message={message}
           index={index}
-          onCopyCode={onCopyCode}
         />
       ))}
 
@@ -173,9 +147,9 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language, onCopy }) => {
           aria-label={copied ? 'Copied!' : 'Copy code'}
         >
           {copied ? (
-            <CheckCheck className="w-4 h-4 text-green-400" />
+            <span className="w-4 h-4 text-green-400">✓✓</span>
           ) : (
-            <Copy className="w-4 h-4" />
+            <span className="w-4 h-4">📋</span>
           )}
         </button>
       </div>

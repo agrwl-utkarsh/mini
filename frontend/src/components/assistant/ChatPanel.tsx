@@ -1,27 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
-import { Zap, Brain, Info, AlertTriangle, FileText } from 'lucide-react';
-import { classNames } from '../../utils/formatters';
+import { Zap, Brain, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/Badge';
-import { Spinner } from '../ui/Spinner';
 import { api } from '../../services/api';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
-import type { ChatMessage, FileReference, AskResponse } from '../../types';
+import type { ChatMessage, AskResponse } from '../../types';
 
 interface ChatPanelProps {
   repoId?: string;
-  tree?: any[];
 }
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId, tree = [] }) => {
+export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId }) => {
   const { repoId: urlRepoId } = useParams<{ repoId: string }>();
   const effectiveRepoId = repoId || urlRepoId;
   const context = useOutletContext<{ closeRightPanel: () => void }>();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [references, setReferences] = useState<FileReference[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fallbackMode, setFallbackMode] = useState(false);
@@ -29,7 +25,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId, tree = [] }) => {
   const handleSend = useCallback(async (question: string) => {
     if (!effectiveRepoId) return;
 
-    // Add user message
     const userMessage: ChatMessage = {
       role: 'user',
       content: question,
@@ -46,18 +41,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId, tree = [] }) => {
         messages.map((m) => ({ role: m.role, content: m.content }))
       );
 
-      // Add assistant message
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: response.answer,
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, assistantMessage]);
-      setReferences(response.references);
       setFallbackMode(response.fallback_used);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to get answer');
-      // Add error message
       const errorMessage: ChatMessage = {
         role: 'assistant',
         content: `Sorry, I encountered an error: ${err instanceof Error ? err.message : 'Unknown error'}`,
@@ -68,16 +60,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId, tree = [] }) => {
       setLoading(false);
     }
   }, [effectiveRepoId, messages]);
-
-  const handleReferenceClick = (path: string) => {
-    context?.closeRightPanel();
-    // Navigate to file - this would need router navigation
-    window.dispatchEvent(new CustomEvent('open-file', { detail: { path } }));
-  };
-
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-  };
 
   if (!effectiveRepoId) {
     return (
@@ -106,7 +88,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId, tree = [] }) => {
         <div className="flex items-center gap-2">
           {fallbackMode && (
             <Badge variant="warning" size="sm" dot>
-              <Zap className="w-3 h-3 mr-1" /> Fallback Mode
+              <span className="w-3 h-3 mr-1 bg-current rounded-full" /> Fallback Mode
             </Badge>
           )}
         </div>
@@ -116,7 +98,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId, tree = [] }) => {
       {fallbackMode && (
         <div className="p-4 bg-amber-500/10 border-b border-amber-500/20">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <span className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5">⚠</span>
             <div className="text-sm text-amber-300">
               <p className="font-medium">Running in fallback mode</p>
               <p>Gemini API key not configured. Answers are based on keyword matching only. Add <code className="bg-slate-800 px-1 rounded">GEMINI_API_KEY</code> to enable AI-powered assistance.</p>
@@ -128,10 +110,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId, tree = [] }) => {
       {/* Messages */}
       <MessageList
         messages={messages}
-        references={references}
         loading={loading}
-        onCopyCode={handleCopyCode}
-        onReferenceClick={handleReferenceClick}
+        onCopyCode={() => {}}
       />
 
       {/* Input */}
@@ -141,7 +121,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId, tree = [] }) => {
       {error && (
         <div className="fixed bottom-4 right-4 z-50 animate-slide-in">
           <div className="bg-red-500/90 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 max-w-md">
-            <AlertTriangle className="w-5 h-5" />
+            <span className="w-5 h-5">⚠</span>
             <span className="text-sm">{error}</span>
             <button onClick={() => setError('')} className="ml-2 text-white/70 hover:text-white">
               ✕

@@ -1,7 +1,12 @@
-import React, { useRef, useImperativeHandle, forwardRef } from 'react';
-import { Send, Paperclip, Mic, Smile } from 'lucide-react';
+import React, { useRef, useImperativeHandle, forwardRef, useState } from 'react';
+import { Send } from 'lucide-react';
 import { classNames } from '../../utils/formatters';
 import { Button } from '../ui/Button';
+
+interface MessageInputRef {
+  focus: () => void;
+  clear: () => void;
+}
 
 interface MessageInputProps {
   onSend: (message: string) => void;
@@ -9,10 +14,10 @@ interface MessageInputProps {
   placeholder?: string;
 }
 
-export const MessageInput = forwardRef<HTMLDivElement, MessageInputProps>(
+export const MessageInput = forwardRef<MessageInputRef, MessageInputProps>(
   ({ onSend, disabled = false, placeholder = 'Ask about the codebase...' }, ref) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const [value, setValue] = React.useState('');
+    const [value, setValue] = useState('');
     const [height, setHeight] = useState(44);
 
     useImperativeHandle(ref, () => ({
@@ -24,7 +29,6 @@ export const MessageInput = forwardRef<HTMLDivElement, MessageInputProps>(
       const newValue = e.target.value;
       setValue(newValue);
 
-      // Auto-resize
       const textarea = e.target;
       textarea.style.height = 'auto';
       const newHeight = Math.min(Math.max(textarea.scrollHeight, 44), 200);
