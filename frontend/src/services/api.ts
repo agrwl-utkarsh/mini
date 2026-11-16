@@ -11,7 +11,10 @@ import type {
   AskResponse,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+// Use Vercel service binding (BACKEND_URL) when available, fallback to VITE_API_BASE_URL for local dev
+const API_BASE_URL = import.meta.env.BACKEND_URL
+  ? `${import.meta.env.BACKEND_URL}/api/v1`
+  : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1');
 
 class ApiService {
   private client: AxiosInstance;
