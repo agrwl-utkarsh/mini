@@ -23,7 +23,7 @@ import 'prismjs/components/prism-php';
 import 'prismjs/components/prism-ruby';
 import 'prismjs/components/prism-swift';
 import 'prismjs/components/prism-kotlin';
-import 'prismjs/components/prism-html';
+import 'prismjs/components/prism-markup';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-scss';
 import 'prismjs/components/prism-json';
@@ -60,7 +60,7 @@ const languageMap: Record<string, string> = {
   Ruby: 'ruby',
   Swift: 'swift',
   Kotlin: 'kotlin',
-  HTML: 'html',
+  HTML: 'markup',
   CSS: 'css',
   SCSS: 'scss',
   JSON: 'json',
