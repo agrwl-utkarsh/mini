@@ -54,7 +54,8 @@ export const Dashboard: React.FC = () => {
   const handleNewAnalysis = () => navigate('/');
 
   if (!repoId) {
-    return navigate('/');
+    navigate('/');
+    return null;
   }
 
   if (error && !status) {

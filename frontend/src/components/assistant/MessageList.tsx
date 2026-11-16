@@ -1,22 +1,18 @@
 import React, { useRef, useEffect } from 'react';
-import { Copy, CheckCheck, FileText, Clock } from 'lucide-react';
-import { Badge } from '../ui/Badge';
+import { Copy, CheckCheck } from 'lucide-react';
+import { classNames } from '../../utils/formatters';
 import type { ChatMessage, FileReference } from '../../types';
 
 interface MessageListProps {
   messages: ChatMessage[];
-  references: FileReference[];
   loading?: boolean;
   onCopyCode: (code: string) => void;
-  onReferenceClick: (path: string) => void;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
   messages,
-  references,
   loading,
   onCopyCode,
-  onReferenceClick,
 }) => {
   const endRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -105,10 +101,9 @@ export const MessageList: React.FC<MessageListProps> = ({
 interface MessageBubbleProps {
   message: ChatMessage;
   index: number;
-  onCopyCode: (code: string) => void;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onCopyCode }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   return (
     <div className="flex gap-3">
       <div

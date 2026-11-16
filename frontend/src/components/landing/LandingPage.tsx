@@ -4,7 +4,6 @@ import { Github, ArrowRight, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Card } from '../ui/Card';
-import { Spinner } from '../ui/Spinner';
 import { api } from '../../services/api';
 
 export const LandingPage: React.FC = () => {

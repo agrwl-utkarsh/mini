@@ -2,10 +2,10 @@ import React from 'react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { formatBytes, formatNumber, getLanguageColor, getLanguageIcon } from '../../utils/formatters';
-import type { RepoSummary, LanguageStats, FrameworkInfo } from '../../types';
+import type { RepoSummary as RepoSummaryType, LanguageStats, FrameworkInfo } from '../../types';
 
 interface RepoSummaryProps {
-  summary: RepoSummary;
+  summary: RepoSummaryType;
 }
 
 export const RepoSummary: React.FC<RepoSummaryProps> = ({ summary }) => {
