@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, File, Folder, FileCode, Image } from 'lucide-react';
+import { ChevronRight, Folder, FileCode, Image } from 'lucide-react';
 import { classNames } from '../../utils/formatters';
 import { Badge } from '../ui/Badge';
-import { truncatePath, getLanguageColor, getLanguageIcon, isImageFile } from '../../utils/formatters';
+import { getLanguageIcon, isImageFile } from '../../utils/formatters';
 import type { TreeNode } from '../../types';
 
 interface FileNodeProps {

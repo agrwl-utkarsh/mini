@@ -116,5 +116,3 @@ export const FileTabs: React.FC<FileTabsProps> = ({
     </div>
   );
 };
-
-import { useRef } from 'react';

@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Github, ArrowRight, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { classNames } from '../../utils/formatters';
+import { Github, ArrowRight, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Card } from '../ui/Card';
 import { Spinner } from '../ui/Spinner';
 import { api } from '../../services/api';
-import { formatBytes } from '../../utils/formatters';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [validating, setValidating] = useState(false);
 
   const validateUrl = (value: string): boolean => {
     try {

@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import { classNames } from '../../utils/formatters';
+import { useParams, useOutletContext } from 'react-router-dom';
 import { FileTree } from './FileTree';
 import { api } from '../../services/api';
 import type { TreeNode, RepoTreeResponse } from '../../types';
@@ -16,7 +15,6 @@ export const FileExplorer: React.FC = () => {
   const [tree, setTree] = useState<TreeNode[]>([]);
   const [selectedPath, setSelectedPath] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   // Load tree on mount
   useEffect(() => {
@@ -27,12 +25,11 @@ export const FileExplorer: React.FC = () => {
   const loadTree = async () => {
     if (!repoId) return;
     setLoading(true);
-    setError('');
     try {
       const response: RepoTreeResponse = await api.getRepoTree(repoId);
       setTree(response.tree);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load file tree');
+      // Error handled by FileTree component
     } finally {
       setLoading(false);
     }
@@ -59,6 +56,3 @@ export const FileExplorer: React.FC = () => {
     />
   );
 };
-
-// Need to import useParams
-import { useParams } from 'react-router-dom';

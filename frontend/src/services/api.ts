@@ -11,7 +11,8 @@ import type {
 // On Vercel: use relative URLs (rewrites proxy to Render backend)
 // Local dev: use VITE_API_BASE_URL env var
 const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
-const API_BASE_URL = isVercel ? '' : (import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8000/api/v1');
+const viteApiBaseUrl = (import.meta as unknown as { env?: { VITE_API_BASE_URL?: string } }).env?.VITE_API_BASE_URL;
+const API_BASE_URL = isVercel ? '' : (viteApiBaseUrl || 'http://localhost:8000/api/v1');
 
 interface ApiErrorResponse {
   detail?: string;

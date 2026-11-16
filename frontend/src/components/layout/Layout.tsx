@@ -38,8 +38,6 @@ export const Layout: React.FC<LayoutProps> = ({
 
   const closeRightPanel = () => setRightPanelOpen(false);
 
-  const isAnalyzing = status === 'cloning' || status === 'scanning' || status === 'pending';
-
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
       {/* Sidebar */}

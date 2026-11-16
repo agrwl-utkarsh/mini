@@ -101,8 +101,8 @@ export const FileExplainer: React.FC<FileExplainerProps> = ({ filePath }) => {
           </div>
         </div>
         {explanation.fallback_used && (
-          <Badge variant="warning" size="sm" dot leftIcon={<Zap className="w-3 h-3" />}>
-            Fallback Mode
+          <Badge variant="warning" size="sm" dot>
+            <Zap className="w-3 h-3 mr-1" /> Fallback Mode
           </Badge>
         )}
       </div>

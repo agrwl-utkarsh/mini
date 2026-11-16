@@ -105,8 +105,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId, tree = [] }) => {
         </div>
         <div className="flex items-center gap-2">
           {fallbackMode && (
-            <Badge variant="warning" size="sm" dot leftIcon={<Zap className="w-3 h-3" />}>
-              Fallback Mode
+            <Badge variant="warning" size="sm" dot>
+              <Zap className="w-3 h-3 mr-1" /> Fallback Mode
             </Badge>
           )}
         </div>

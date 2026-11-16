@@ -1,5 +1,5 @@
 import React from 'react';
-import { Github, ExternalLink, RefreshCw, Trash2, ChevronDown } from 'lucide-react';
+import { Github, ExternalLink, RefreshCw, Trash2 } from 'lucide-react';
 import { classNames } from '../../utils/formatters';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
