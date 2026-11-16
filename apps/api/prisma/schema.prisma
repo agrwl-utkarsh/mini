@@ -1,0 +1,777 @@
+// FESTORA Database Schema
+// This is the Prisma schema for the PostgreSQL database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  ADMIN
+  FACULTY
+  ORGANIZER
+  VOLUNTEER
+  PARTICIPANT
+  SPONSOR
+  FINANCE_TEAM
+}
+
+enum EventStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  PUBLISHED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum EventType {
+  WORKSHOP
+  SEMINAR
+  CONFERENCE
+  COMPETITION
+  CULTURAL
+  SPORTS
+  TECHNICAL
+  OTHER
+}
+
+enum RegistrationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  WAITLISTED
+}
+
+enum TicketStatus {
+  VALID
+  USED
+  EXPIRED
+  CANCELLED
+  INVALID
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum IssueSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+enum SponsorshipStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum BenefitStatus {
+  PENDING
+  IN_PROGRESS
+  FULFILLED
+  NOT_FULFILLED
+}
+
+enum CompetitionStatus {
+  DRAFT
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum CertificateStatus {
+  ISSUED
+  REVOKED
+  EXPIRED
+}
+
+enum FeedbackType {
+  RATING
+  TEXT
+  MULTIPLE_CHOICE
+  CHECKBOX
+}
+
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum CompetitionEntryStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  avatarUrl     String?   @db.Text
+  role          UserRole  @default(PARTICIPANT)
+  department    String?   @db.VarChar(100)
+  studentId     String?   @unique @db.VarChar(50)
+  employeeId    String?   @unique @db.VarChar(50)
+  phone         String?   @db.VarChar(20)
+  isActive      Boolean   @default(true)
+  emailVerified Boolean   @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  organizedEvents     Event[]              @relation("EventOrganizer")
+  approvedEvents      Event[]              @relation("EventApprover")
+  registrations       Registration[]
+  tickets             Ticket[]             @relation("TicketUser")
+  attendances         Attendance[]         @relation("AttendanceScanner")
+  assignedTasks       Task[]               @relation("TaskAssignee")
+  reportedTasks       Task[]               @relation("TaskReporter")
+  taskComments        TaskComment[]
+  reportedIssues      Issue[]              @relation("IssueReporter")
+  assignedIssues      Issue[]              @relation("IssueAssignee")
+  recordedExpenses    Expense[]            @relation("ExpenseRecorder")
+  approvedExpenses    Expense[]            @relation("ExpenseApprover")
+  sponsorContacts     Sponsor[]            @relation("SponsorContact")
+  competitionEntries  CompetitionEntry[]   @relation("CompetitionEntryLeader")
+  competitionScores   CompetitionScore[]   @relation("CompetitionScoreJudge")
+  issuedCertificates  Certificate[]        @relation("CertificateIssuer")
+  receivedCertificates Certificate[]       @relation("CertificateRecipient")
+  feedbackResponses   FeedbackResponse[]
+  budgetApprovals     Budget[]             @relation("BudgetApprover")
+  allocationRecords   BudgetAllocation[]   @relation("AllocationRecorder")
+  notificationLogs    NotificationLog[]
+  auditLogs           AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@map("users")
+}
+
+model Event {
+  id                   String       @id @default(uuid())
+  title                String       @db.VarChar(200)
+  slug                 String       @unique @db.VarChar(220)
+  description          String?      @db.Text
+  shortDescription     String?      @db.VarChar(500)
+  type                 EventType
+  category             String?      @db.VarChar(100)
+  tags                 String[]     @default([])
+  startDate            DateTime
+  endDate              DateTime
+  registrationStartDate DateTime?
+  registrationEndDate   DateTime?
+  capacity             Int?
+  venueId              String?
+  venueName            String?      @db.VarChar(200)
+  location             String?      @db.VarChar(500)
+  isVirtual            Boolean      @default(false)
+  virtualLink          String?      @db.Text
+  coverImageUrl        String?      @db.Text
+  organizerId          String
+  status               EventStatus  @default(DRAFT)
+  approvalRequired     Boolean      @default(true)
+  approvedBy           String?
+  approvedAt           DateTime?
+  rejectionReason      String?      @db.Text
+  publishedAt          DateTime?
+  cancelledAt          DateTime?
+  cancellationReason   String?      @db.Text
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  // Relations
+  organizer        User           @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Restrict)
+  approver         User?          @relation("EventApprover", fields: [approvedBy], references: [id], onDelete: SetNull)
+  venue            Venue?         @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  approvals        EventApproval[]
+  registrations    Registration[]
+  tickets          Ticket[]
+  attendances      Attendance[]
+  tasks            Task[]
+  issues           Issue[]
+  budget           Budget?
+  expenses         Expense[]
+  sponsorships     Sponsorship[]
+  competitions     Competition[]
+  certificates     Certificate[]
+  feedbackQuestions FeedbackQuestion[]
+  feedbackResponses FeedbackResponse[]
+
+  @@index([organizerId])
+  @@index([status])
+  @@index([startDate])
+  @@index([venueId])
+  @@index([slug])
+  @@map("events")
+}
+
+model EventApproval {
+  id          String   @id @default(uuid())
+  eventId     String
+  reviewerId  String
+  status      EventStatus
+  comments    String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reviewer User @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
+
+  @@index([eventId])
+  @@index([reviewerId])
+  @@map("event_approvals")
+}
+
+model Venue {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(200)
+  location    String   @db.VarChar(500)
+  capacity    Int
+  description String?  @db.Text
+  amenities   String[] @default([])
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  events Event[]
+
+  @@index([name])
+  @@index([isActive])
+  @@map("venues")
+}
+
+model Registration {
+  id                  String             @id @default(uuid())
+  eventId             String
+  userId              String
+  status              RegistrationStatus @default(PENDING)
+  registeredAt        DateTime           @default(now())
+  confirmedAt         DateTime?
+  cancelledAt         DateTime?
+  cancellationReason  String?            @db.Text
+  attendedAt          DateTime?
+  waitlistPosition    Int?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticket Ticket?
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([status])
+  @@map("registrations")
+}
+
+model Ticket {
+  id          String       @id @default(uuid())
+  registrationId String   @unique
+  token       String       @unique @db.VarChar(255)
+  qrCodeUrl   String?      @db.Text
+  status      TicketStatus @default(VALID)
+  issuedAt    DateTime     @default(now())
+  usedAt      DateTime?
+  usedBy      String?
+  expiresAt   DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  attendance   Attendance?
+
+  @@index([token])
+  @@index([status])
+  @@map("tickets")
+}
+
+model Attendance {
+  id              String   @id @default(uuid())
+  eventId         String
+  registrationId  String
+  ticketId        String   @unique
+  scannedBy       String
+  scannedAt       DateTime @default(now())
+  isManualEntry   Boolean  @default(false)
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  event       Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  ticket      Ticket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  scanner     User       @relation("AttendanceScanner", fields: [scannedBy], references: [id], onDelete: Restrict)
+
+  @@unique([registrationId, eventId])
+  @@index([eventId])
+  @@index([scannedBy])
+  @@index([scannedAt])
+  @@map("attendances")
+}
+
+model Task {
+  id              String       @id @default(uuid())
+  eventId         String
+  title           String       @db.VarChar(200)
+  description     String?      @db.Text
+  assigneeId      String?
+  reporterId      String
+  status          TaskStatus   @default(TODO)
+  priority        TaskPriority @default(MEDIUM)
+  dueDate         DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  estimatedHours  Float?
+  actualHours     Float?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  event     Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  assignee  User?       @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  reporter  User        @relation("TaskReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  comments  TaskComment[]
+
+  @@index([eventId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+model TaskComment {
+  id        String   @id @default(uuid())
+  taskId    String
+  userId    String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([taskId])
+  @@index([userId])
+  @@map("task_comments")
+}
+
+model Issue {
+  id                String        @id @default(uuid())
+  eventId           String
+  reportedBy        String
+  title             String        @db.VarChar(200)
+  description       String        @db.Text
+  severity          IssueSeverity
+  status            IssueStatus   @default(OPEN)
+  assignedTo        String?
+  resolvedAt        DateTime?
+  resolutionNotes   String?       @db.Text
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  event      Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reporter   User   @relation("IssueReporter", fields: [reportedBy], references: [id], onDelete: Restrict)
+  assignee   User?  @relation("IssueAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+  @@index([reportedBy])
+  @@index([status])
+  @@index([severity])
+  @@map("issues")
+}
+
+model Budget {
+  id             String   @id @default(uuid())
+  eventId        String   @unique
+  approvedAmount Decimal  @db.Decimal(15, 2)
+  currency       String   @default("INR") @db.VarChar(3)
+  approvedBy     String?
+  approvedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  event     Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  approver  User?  @relation("BudgetApprover", fields: [approvedBy], references: [id], onDelete: SetNull)
+  expenses  Expense[]
+  allocations BudgetAllocation[]
+
+  @@index([eventId])
+  @@map("budgets")
+}
+
+model ExpenseCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.Text
+  color       String?  @db.VarChar(7)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  expenses Expense[]
+
+  @@index([name])
+  @@index([isActive])
+  @@map("expense_categories")
+}
+
+model Expense {
+  id                 String        @id @default(uuid())
+  eventId            String
+  categoryId         String
+  description        String        @db.VarChar(500)
+  amount             Decimal       @db.Decimal(15, 2)
+  currency           String        @default("INR") @db.VarChar(3)
+  expenseDate        DateTime
+  recordedBy         String
+  status             ExpenseStatus @default(PENDING)
+  approvedBy         String?
+  approvedAt         DateTime?
+  receiptUrl         String?       @db.Text
+  receiptReference   String?       @db.VarChar(200)
+  notes              String?       @db.Text
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  event     Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  category  ExpenseCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  recorder  User             @relation("ExpenseRecorder", fields: [recordedBy], references: [id], onDelete: Restrict)
+  approver  User?            @relation("ExpenseApprover", fields: [approvedBy], references: [id], onDelete: SetNull)
+  allocations BudgetAllocation[]
+
+  @@index([eventId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([expenseDate])
+  @@index([recordedBy])
+  @@map("expenses")
+}
+
+model Sponsor {
+  id            String   @id @default(uuid())
+  name          String   @db.VarChar(200)
+  logoUrl       String?  @db.Text
+  website       String?  @db.Text
+  contactName   String?  @db.VarChar(100)
+  contactEmail  String?  @db.VarChar(255)
+  contactPhone  String?  @db.VarChar(20)
+  address       String?  @db.VarChar(500)
+  description   String?  @db.Text
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contact      User?           @relation("SponsorContact", fields: [contactEmail], references: [email])
+  sponsorships Sponsorship[]
+
+  @@index([name])
+  @@index([isActive])
+  @@map("sponsors")
+}
+
+model Sponsorship {
+  id              String             @id @default(uuid())
+  eventId         String
+  sponsorId       String
+  title           String             @db.VarChar(200)
+  description     String?            @db.Text
+  promisedAmount  Decimal            @db.Decimal(15, 2)
+  receivedAmount  Decimal            @default(0) @db.Decimal(15, 2)
+  currency        String             @default("INR") @db.VarChar(3)
+  status          SponsorshipStatus  @default(PENDING)
+  startDate       DateTime?
+  endDate         DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  event       Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sponsor     Sponsor     @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  contributions SponsorContribution[]
+  benefits    SponsorBenefit[]
+  allocations BudgetAllocation[]
+
+  @@index([eventId])
+  @@index([sponsorId])
+  @@index([status])
+  @@map("sponsorships")
+}
+
+model SponsorContribution {
+  id              String   @id @default(uuid())
+  sponsorshipId   String
+  amount          Decimal  @db.Decimal(15, 2)
+  currency        String   @default("INR") @db.VarChar(3)
+  contributedAt   DateTime
+  reference       String?  @db.VarChar(200)
+  notes           String?  @db.Text
+  recordedBy      String
+  createdAt       DateTime @default(now())
+
+  sponsorship Sponsorship @relation(fields: [sponsorshipId], references: [id], onDelete: Cascade)
+  recorder    User        @relation(fields: [recordedBy], references: [id], onDelete: Restrict)
+
+  @@index([sponsorshipId])
+  @@index([contributedAt])
+  @@map("sponsor_contributions")
+}
+
+model SponsorBenefit {
+  id                  String        @id @default(uuid())
+  sponsorshipId       String
+  description         String        @db.VarChar(500)
+  expectedDate        DateTime?
+  responsiblePersonId String?
+  status              BenefitStatus @default(PENDING)
+  fulfillmentNotes    String?       @db.Text
+  fulfilledAt         DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  sponsorship      Sponsorship @relation(fields: [sponsorshipId], references: [id], onDelete: Cascade)
+  responsiblePerson User?       @relation(fields: [responsiblePersonId], references: [id], onDelete: SetNull)
+
+  @@index([sponsorshipId])
+  @@index([status])
+  @@map("sponsor_benefits")
+}
+
+model BudgetAllocation {
+  id                  String   @id @default(uuid())
+  sponsorshipId       String
+  expenseCategoryId   String
+  allocatedAmount     Decimal  @db.Decimal(15, 2)
+  spentAmount         Decimal  @default(0) @db.Decimal(15, 2)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  sponsorship     Sponsorship     @relation(fields: [sponsorshipId], references: [id], onDelete: Cascade)
+  expenseCategory ExpenseCategory @relation(fields: [expenseCategoryId], references: [id], onDelete: Restrict)
+  expenses        Expense[]
+
+  @@unique([sponsorshipId, expenseCategoryId])
+  @@index([sponsorshipId])
+  @@index([expenseCategoryId])
+  @@map("budget_allocations")
+}
+
+model Competition {
+  id                     String             @id @default(uuid())
+  eventId                String
+  name                   String             @db.VarChar(200)
+  description            String?            @db.Text
+  rules                  String?            @db.Text
+  maxTeamSize            Int                @default(1)
+  minTeamSize            Int                @default(1)
+  registrationStartDate  DateTime?
+  registrationEndDate    DateTime?
+  status                 CompetitionStatus  @default(DRAFT)
+  scoringConfig          Json?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  event    Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  entries  CompetitionEntry[]
+  scores   CompetitionScore[]
+
+  @@index([eventId])
+  @@index([status])
+  @@map("competitions")
+}
+
+model CompetitionEntry {
+  id          String                  @id @default(uuid())
+  competitionId String
+  teamName    String?                 @db.VarChar(100)
+  leaderId    String
+  memberIds   String[]                @default([])
+  status      CompetitionEntryStatus  @default(PENDING)
+  registeredAt DateTime               @default(now())
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  competition Competition  @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  leader      User         @relation("CompetitionEntryLeader", fields: [leaderId], references: [id], onDelete: Restrict)
+  scores      CompetitionScore[]
+
+  @@index([competitionId])
+  @@index([leaderId])
+  @@index([status])
+  @@map("competition_entries")
+}
+
+model CompetitionScore {
+  id              String   @id @default(uuid())
+  competitionId   String
+  entryId         String
+  judgeId         String
+  criteriaScores  Json
+  totalScore      Decimal  @db.Decimal(10, 2)
+  notes           String?  @db.Text
+  submittedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  competition Competition      @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  entry       CompetitionEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  judge       User             @relation("CompetitionScoreJudge", fields: [judgeId], references: [id], onDelete: Restrict)
+
+  @@unique([competitionId, entryId, judgeId])
+  @@index([competitionId])
+  @@index([entryId])
+  @@index([judgeId])
+  @@map("competition_scores")
+}
+
+model Certificate {
+  id                String             @id @default(uuid())
+  eventId           String
+  userId            String
+  type              String             @db.VarChar(100)
+  title             String             @db.VarChar(200)
+  description       String?            @db.Text
+  templateId        String?
+  pdfUrl            String?            @db.Text
+  certificateNumber String             @unique @db.VarChar(100)
+  issuedAt          DateTime           @default(now())
+  issuedBy          String
+  status            CertificateStatus  @default(ISSUED)
+  revokedAt         DateTime?
+  revokedBy         String?
+  revocationReason  String?            @db.Text
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user    User   @relation("CertificateRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  issuer  User   @relation("CertificateIssuer", fields: [issuedBy], references: [id], onDelete: Restrict)
+
+  @@unique([eventId, userId, type])
+  @@index([eventId])
+  @@index([userId])
+  @@index([certificateNumber])
+  @@index([status])
+  @@map("certificates")
+}
+
+model FeedbackQuestion {
+  id        String         @id @default(uuid())
+  eventId   String
+  type      FeedbackType
+  question  String         @db.VarChar(500)
+  options   String[]       @default([])
+  isRequired Boolean       @default(false)
+  order     Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  event     Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  responses FeedbackResponse[]
+
+  @@index([eventId])
+  @@index([order])
+  @@map("feedback_questions")
+}
+
+model FeedbackResponse {
+  id            String   @id @default(uuid())
+  eventId       String
+  userId        String
+  registrationId String?
+  questionId    String
+  answer        Json
+  submittedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  event       Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  registration Registration?    @relation(fields: [registrationId], references: [id], onDelete: SetNull)
+  question    FeedbackQuestion  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId, questionId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([questionId])
+  @@map("feedback_responses")
+}
+
+model NotificationLog {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   @db.VarChar(50)
+  title     String   @db.VarChar(200)
+  message   String   @db.Text
+  data      Json?
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notification_logs")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  action      String   @db.VarChar(100)
+  entityType  String   @db.VarChar(50)
+  entityId    String   @db.VarChar(100)
+  oldData     Json?
+  newData     Json?
+  ipAddress   String?  @db.VarChar(45)
+  userAgent   String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
