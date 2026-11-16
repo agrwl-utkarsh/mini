@@ -1,85 +1,40 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
-    "backend": {
-      "root": "backend",
-      "framework": "fastapi",
-      "buildCommand": "pip install -r requirements.txt",
-      "runtime": "python3.11",
-      "bindings": [
-        {
-          "type": "service",
-          "service": "frontend",
-          "format": "url",
-          "env": "FRONTEND_URL"
-        }
-      ]
-    },
     "frontend": {
       "root": "frontend",
       "framework": "vite",
       "buildCommand": "npm run build",
       "outputDirectory": "dist",
-      "devCommand": "npm run dev",
-      "bindings": [
-        {
-          "type": "service",
-          "service": "backend",
-          "format": "url",
-          "env": "BACKEND_URL"
-        }
-      ]
+      "devCommand": "npm run dev"
     }
   },
   "rewrites": [
     {
       "source": "/api/v1/(.*)",
-      "destination": {
-        "service": "backend"
-      }
+      "destination": "https://RENDER_BACKEND_URL.onrender.com/api/v1/$1"
     },
     {
       "source": "/api/(.*)",
-      "destination": {
-        "service": "backend"
-      }
+      "destination": "https://RENDER_BACKEND_URL.onrender.com/api/$1"
     },
     {
       "source": "/health",
-      "destination": {
-        "service": "backend"
-      }
+      "destination": "https://RENDER_BACKEND_URL.onrender.com/health"
     },
     {
       "source": "/docs",
-      "destination": {
-        "service": "backend"
-      }
+      "destination": "https://RENDER_BACKEND_URL.onrender.com/docs"
     },
     {
       "source": "/openapi.json",
-      "destination": {
-        "service": "backend"
-      },
-      "has": [
-        {
-          "type": "header",
-          "key": "accept",
-          "value": "application/json"
-        }
-      ]
+      "destination": "https://RENDER_BACKEND_URL.onrender.com/openapi.json"
     },
     {
       "source": "/(.*)",
       "destination": {
         "service": "frontend"
       }
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/v1/cleanup",
-      "schedule": "0 * * * *"
     }
   ]
 }

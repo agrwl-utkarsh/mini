@@ -11,17 +11,17 @@ import type {
   AskResponse,
 } from '../types';
 
-// Use Vercel service binding (BACKEND_URL) when available, fallback to VITE_API_BASE_URL for local dev
-const API_BASE_URL = import.meta.env.BACKEND_URL
-  ? `${import.meta.env.BACKEND_URL}/api/v1`
-  : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1');
+// On Vercel: use relative URLs (rewrites proxy to Render backend)
+// Local dev: use VITE_API_BASE_URL env var
+const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+const API_BASE_URL = isVercel ? '' : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1');
 
 class ApiService {
   private client: AxiosInstance;
 
   constructor() {
     this.client = axios.create({
-      baseURL: API_BASE_URL,
+      baseURL: API_BASE_URL || undefined,
       timeout: 120000, // 2 minutes for clone operations
       headers: {
         'Content-Type': 'application/json',
