@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Prism } from 'prismjs';
-import { Copy, Download, Maximize2, Minimize2, ChevronLeft, ChevronRight } from 'lucide-react';
+import Prism from 'prismjs';
+import { Copy, Download, Maximize2, Minimize2, ChevronLeft } from 'lucide-react';
 import { classNames } from '../../utils/formatters';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, FolderGit2, FileText, MessageSquare, Settings, Home, X } from 'lucide-react';
+import { ChevronRight, FolderGit2, FileText, MessageSquare, Settings, X } from 'lucide-react';
 import { classNames } from '../../utils/formatters';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';

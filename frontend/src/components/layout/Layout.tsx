@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { Button } from '../ui/Button';
 import { classNames } from '../../utils/formatters';
 
 interface LayoutProps {

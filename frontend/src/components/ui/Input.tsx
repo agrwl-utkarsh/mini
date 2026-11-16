@@ -48,8 +48,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               'transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500',
               'disabled:opacity-50 disabled:cursor-not-allowed',
-              leftIcon && 'pl-10',
-              rightIcon && 'pr-10',
+              leftIcon ? 'pl-10' : '',
+              rightIcon ? 'pr-10' : '',
               error
                 ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/50'
                 : 'border-slate-700 hover:border-slate-600',

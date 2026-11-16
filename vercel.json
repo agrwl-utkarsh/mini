@@ -12,23 +12,23 @@
   "rewrites": [
     {
       "source": "/api/v1/(.*)",
-      "destination": "https://RENDER_BACKEND_URL.onrender.com/api/v1/$1"
+      "destination": "https://reposense-backend.onrender.com/api/v1/$1"
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://RENDER_BACKEND_URL.onrender.com/api/$1"
+      "destination": "https://reposense-backend.onrender.com/api/$1"
     },
     {
       "source": "/health",
-      "destination": "https://RENDER_BACKEND_URL.onrender.com/health"
+      "destination": "https://reposense-backend.onrender.com/health"
     },
     {
       "source": "/docs",
-      "destination": "https://RENDER_BACKEND_URL.onrender.com/docs"
+      "destination": "https://reposense-backend.onrender.com/docs"
     },
     {
       "source": "/openapi.json",
-      "destination": "https://RENDER_BACKEND_URL.onrender.com/openapi.json"
+      "destination": "https://reposense-backend.onrender.com/openapi.json"
     },
     {
       "source": "/(.*)",

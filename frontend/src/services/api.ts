@@ -1,20 +1,21 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import type {
-  RepoAnalyzeRequest,
   RepoAnalyzeResponse,
   RepoStatusResponse,
   RepoTreeResponse,
   FileContentResponse,
-  FileExplainRequest,
   FileExplainResponse,
-  AskRequest,
   AskResponse,
 } from '../types';
 
 // On Vercel: use relative URLs (rewrites proxy to Render backend)
 // Local dev: use VITE_API_BASE_URL env var
 const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
-const API_BASE_URL = isVercel ? '' : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1');
+const API_BASE_URL = isVercel ? '' : (import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8000/api/v1');
+
+interface ApiErrorResponse {
+  detail?: string;
+}
 
 class ApiService {
   private client: AxiosInstance;
@@ -31,7 +32,7 @@ class ApiService {
     // Response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => response,
-      (error: AxiosError) => {
+      (error: AxiosError<ApiErrorResponse>) => {
         const message = error.response?.data?.detail || error.message || 'An error occurred';
         return Promise.reject(new Error(message));
       }

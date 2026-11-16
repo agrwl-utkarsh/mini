@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { classNames } from '../../utils/formatters';
 import { Badge } from '../ui/Badge';
@@ -9,7 +9,6 @@ interface FileTabsProps {
   activeTab: string | null;
   onTabChange: (path: string) => void;
   onTabClose: (path: string) => void;
-  onMaximize?: (path: string) => void;
 }
 
 const MAX_VISIBLE_TABS = 8;
@@ -19,9 +18,8 @@ export const FileTabs: React.FC<FileTabsProps> = ({
   activeTab,
   onTabChange,
   onTabClose,
-  onMaximize,
 }) => {
-  const [scrollOffset, setScrollOffset] = useState(0);
+  const [scrollOffset] = useState(0);
   const tabsRef = useRef<HTMLDivElement>(null);
 
   const scrollLeft = useCallback(() => {

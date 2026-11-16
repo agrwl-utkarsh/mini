@@ -129,6 +129,8 @@ export interface FileTab {
   language: string;
   content?: string;
   isBinary: boolean;
+  lines: number;
+  size: number;
 }
 
 export interface SidebarSection {
