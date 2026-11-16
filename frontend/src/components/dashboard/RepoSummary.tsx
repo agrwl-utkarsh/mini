@@ -1,6 +1,5 @@
 import React from 'react';
-import { classNames } from '../../utils/formatters';
-import { Card, CardContent } from '../ui/Card';
+import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { formatBytes, formatNumber, getLanguageColor, getLanguageIcon } from '../../utils/formatters';
 import type { RepoSummary, LanguageStats, FrameworkInfo } from '../../types';

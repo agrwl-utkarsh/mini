@@ -1,16 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { classNames } from '../../utils/formatters';
 import { LoadingState } from './LoadingState';
 import { RepoSummary } from './RepoSummary';
-import { Spinner } from '../ui/Spinner';
 import { api } from '../../services/api';
 import type { RepoStatusResponse, RepoStatus } from '../../types';
-
-interface DashboardContext {
-  openRightPanel: (content: 'explainer' | 'assistant') => void;
-  closeRightPanel: () => void;
-}
 
 export const Dashboard: React.FC = () => {
   const { repoId } = useParams<{ repoId: string }>();
@@ -112,8 +105,5 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  // Ready state - render summary in sidebar context
-  return (
-    <RepoSummary summary={status.summary!} />
-  );
+  return <RepoSummary summary={status.summary!} />;
 };

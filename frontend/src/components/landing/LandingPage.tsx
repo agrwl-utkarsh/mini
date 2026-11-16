@@ -86,9 +86,6 @@ export const LandingPage: React.FC = () => {
                   disabled={loading}
                   aria-describedby={error ? 'url-error' : 'url-hint'}
                 />
-                {validating && (
-                  <Spinner size="sm" className="absolute right-3 top-1/2 -translate-y-1/2" color="primary" />
-                )}
               </div>
               {error && (
                 <p id="url-error" className="mt-2 text-sm text-red-400 flex items-center gap-1">

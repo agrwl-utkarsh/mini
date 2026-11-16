@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Copy, Check, CheckCheck, FileText, Clock } from 'lucide-react';
-import { classNames } from '../../utils/formatters';
+import { Copy, CheckCheck, FileText, Clock } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import type { ChatMessage, FileReference } from '../../types';
 
@@ -31,7 +30,6 @@ export const MessageList: React.FC<MessageListProps> = ({
   }, [messages, loading]);
 
   const formatMessage = (content: string) => {
-    // Simple markdown-like formatting for code blocks
     return content
       .replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => (
         `<pre class="language-${lang || 'plaintext'}"><code>${escapeHtml(code.trim())}</code></pre>`
@@ -52,19 +50,15 @@ export const MessageList: React.FC<MessageListProps> = ({
   };
 
   const renderContent = (content: string) => {
-    // Split by code blocks and render safely
     const parts = content.split(/```(\w+)?\n([\s\S]*?)```/);
     return (
       <div className="prose prose-invert max-w-none text-slate-300">
         {parts.map((part, i) => {
           if (i % 3 === 0) {
-            // Regular text
             return <div key={i} dangerouslySetInnerHTML={{ __html: part.replace(/\n/g, '<br>') }} />;
           } else if (i % 3 === 1) {
-            // Language
             return null;
           } else {
-            // Code
             const lang = parts[i - 1] || 'plaintext';
             return (
               <CodeBlock
@@ -115,17 +109,8 @@ interface MessageBubbleProps {
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onCopyCode }) => {
-  const [copied, setCopied] = React.useState(false);
-
-  const handleCopy = async (code: string) => {
-    await navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    onCopyCode(code);
-  };
-
   return (
-    <div className={classNames('flex gap-3', message.role === 'assistant' ? '' : 'flex-row-reverse')}>
+    <div className="flex gap-3">
       <div
         className={classNames(
           'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-medium',
@@ -144,7 +129,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onCopyCode }) =>
             : 'bg-slate-900/50 border border-slate-800 text-slate-300 rounded-bl-none'
         )}
       >
-        <div dangerouslySetInnerHTML={{ __html: formatMessage(message.message) }} />
+        <div dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }} />
       </div>
     </div>
   );

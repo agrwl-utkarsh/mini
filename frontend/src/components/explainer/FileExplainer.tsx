@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Loader2, Zap, Brain, Info, AlertTriangle } from 'lucide-react';
-import { classNames } from '../../utils/formatters';
+import { Zap, Brain, Info, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Spinner } from '../ui/Spinner';
