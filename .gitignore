@@ -1,22 +1,18 @@
 # Dependencies
 node_modules/
-backend/venv/
-backend/.venv/
-backend/env/
+.pnp
+.pnp.js
 
 # Build outputs
-frontend/dist/
-frontend/build/
-backend/dist/
-backend/build/
-*.egg-info/
+dist/
+build/
+*.tsbuildinfo
 
 # Environment files
 .env
 .env.local
 .env.*.local
-backend/.env
-frontend/.env
+!.env.example
 
 # IDE
 .idea/
@@ -33,28 +29,25 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # Testing
 coverage/
 .nyc_output/
 
-# Cache
+# Turbo
 .turbo/
-.cache/
+
+# Prisma
+prisma/migrations/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+
+# Vercel
+.vercel
+
+# TypeScript cache
 *.tsbuildinfo
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-# Repository clones (created at runtime)
-/tmp/reposense/
-backend/tmp/
-
-# Misc
-*.local
