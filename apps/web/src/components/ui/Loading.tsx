@@ -30,8 +30,8 @@ export function Loading({ className, variant = "spinner", size = "md", text }: L
     return (
       <div className={clsx("flex items-center gap-1", className)} role="status" aria-label="Loading">
         <span className={clsx("animate-bounce", sizeClasses[size])}>●</span>
-        <span className={clsx("animate-bounce", sizeClasses[size]), style={{ animationDelay: "0.1s" }}}>●</span>
-        <span className={clsx("animate-bounce", sizeClasses[size]), style={{ animationDelay: "0.2s" }}}>●</span>
+        <span className={clsx("animate-bounce", sizeClasses[size])} style={{ animationDelay: "0.1s" }}>●</span>
+        <span className={clsx("animate-bounce", sizeClasses[size])} style={{ animationDelay: "0.2s" }}>●</span>
         {text && <span className={clsx("ml-2", textSizeClasses[size])}>{text}</span>}
       </div>
     );
