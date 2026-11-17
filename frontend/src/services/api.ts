@@ -8,11 +8,13 @@ import type {
   AskResponse,
 } from '../types';
 
-// On Vercel: use relative URLs (rewrites proxy to Render backend)
-// Local dev: use VITE_API_BASE_URL env var
-const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
-const viteApiBaseUrl = (import.meta as unknown as { env?: { VITE_API_BASE_URL?: string } }).env?.VITE_API_BASE_URL;
-const API_BASE_URL = isVercel ? '' : (viteApiBaseUrl || 'http://localhost:8000/api/v1');
+// API Base URL configuration:
+// 1. If VITE_API_BASE_URL env var is provided (local or production), use it
+// 2. If running locally (localhost / 127.0.0.1), use local backend: http://localhost:8000/api/v1
+// 3. In production (e.g. Vercel), use relative '/api/v1' which proxies via vercel.json rewrites
+const viteApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const API_BASE_URL = viteApiBaseUrl || (isLocalhost ? 'http://localhost:8000/api/v1' : '/api/v1');
 
 interface ApiErrorResponse {
   detail?: string;
@@ -23,7 +25,7 @@ class ApiService {
 
   constructor() {
     this.client = axios.create({
-      baseURL: API_BASE_URL || undefined,
+      baseURL: API_BASE_URL,
       timeout: 120000, // 2 minutes for clone operations
       headers: {
         'Content-Type': 'application/json',

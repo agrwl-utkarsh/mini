@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Search, X, RefreshCw } from 'lucide-react';
+import { Search, X, RefreshCw, FileCode } from 'lucide-react';
 import { classNames } from '../../utils/formatters';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
@@ -115,6 +115,3 @@ export const FileTree: React.FC<FileTreeProps> = ({
     </div>
   );
 };
-
-// Need to import FileCode for empty state
-import { FileCode } from 'lucide-react';

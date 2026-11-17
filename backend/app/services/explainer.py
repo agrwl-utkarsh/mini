@@ -1,8 +1,17 @@
 import os
-import google.generativeai as genai
 from pathlib import Path
 from typing import Optional, List
-import tiktoken
+
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None
+
+try:
+    import tiktoken
+    _tiktoken_encoding = tiktoken.get_encoding("cl100k_base")
+except Exception:
+    _tiktoken_encoding = None
 
 from app.config import settings
 from app.services.analyzer import analyze_code, ParsedCode
@@ -12,12 +21,12 @@ from app.models.file import CodeSymbol
 class FileExplainer:
     def __init__(self):
         self.model = None
-        self.encoding = tiktoken.get_encoding("cl100k_base")
+        self.encoding = _tiktoken_encoding
         self._init_gemini()
 
     def _init_gemini(self):
         """Initialize Gemini if API key is available."""
-        if settings.GEMINI_API_KEY:
+        if settings.GEMINI_API_KEY and genai is not None:
             try:
                 genai.configure(api_key=settings.GEMINI_API_KEY)
                 self.model = genai.GenerativeModel('gemini-1.5-flash')
@@ -26,14 +35,19 @@ class FileExplainer:
                 self.model = None
 
     def _count_tokens(self, text: str) -> int:
-        return len(self.encoding.encode(text))
+        if self.encoding:
+            return len(self.encoding.encode(text))
+        return len(text) // 4
 
     def _truncate_content(self, content: str, max_tokens: int = 8000) -> str:
         """Truncate content to fit within token limit."""
-        tokens = self.encoding.encode(content)
-        if len(tokens) <= max_tokens:
-            return content
-        return self.encoding.decode(tokens[:max_tokens])
+        if self.encoding:
+            tokens = self.encoding.encode(content)
+            if len(tokens) <= max_tokens:
+                return content
+            return self.encoding.decode(tokens[:max_tokens])
+        max_chars = max_tokens * 4
+        return content[:max_chars] if len(content) > max_chars else content
 
     def _build_fallback_explanation(self, parsed: ParsedCode, file_path: str, language: str) -> str:
         """Generate a basic explanation without AI."""

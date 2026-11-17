@@ -282,6 +282,7 @@ class RepoScanner:
 
         for entry in entries:
             rel_path = os.path.join(rel_prefix, entry.name) if rel_prefix else entry.name
+            rel_path = rel_path.replace("\\", "/")
 
             if self._should_ignore(rel_path):
                 continue
@@ -336,6 +337,7 @@ class RepoScanner:
 
             for file in files:
                 rel_file = os.path.join(rel_root, file) if rel_root else file
+                rel_file = rel_file.replace("\\", "/")
                 if self._should_ignore(rel_file):
                     continue
 

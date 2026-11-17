@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Zap, Brain, Info, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
@@ -17,15 +17,7 @@ export const FileExplainer: React.FC<FileExplainerProps> = ({ filePath }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (!repoId || !filePath) {
-      setExplanation(null);
-      return;
-    }
-    loadExplanation();
-  }, [repoId, filePath]);
-
-  const loadExplanation = async () => {
+  const loadExplanation = useCallback(async () => {
     if (!repoId || !filePath) return;
     setLoading(true);
     setError('');
@@ -37,7 +29,15 @@ export const FileExplainer: React.FC<FileExplainerProps> = ({ filePath }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [repoId, filePath]);
+
+  useEffect(() => {
+    if (!repoId || !filePath) {
+      setExplanation(null);
+      return;
+    }
+    loadExplanation();
+  }, [repoId, filePath, loadExplanation]);
 
   if (!filePath) {
     return (
