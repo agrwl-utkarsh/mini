@@ -1,4 +1,4 @@
-# Vercel Multi-Service Deployment Guide
+# Vercel Deployment Guide for RepoSense
 
 ## Architecture Overview
 
@@ -8,140 +8,141 @@
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────────┐         ┌─────────────────┐            │
 │  │   Frontend      │ ◄──────►│    Backend      │            │
-│  │   (Vite/React)  │  Bind   │   (FastAPI)     │            │
-│  │                 │  BACKEND_URL   FRONTEND_URL │            │
-│  │  Public: /*     │         │  Public: /api/* │            │
+│  │   (Vite/React)  │  Proxy  │   (FastAPI)     │            │
+│  │                 │  /api/*     │  External     │            │
+│  │  Public: /*     │         │  (Render)       │            │
 │  └─────────────────┘         └─────────────────┘            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Service Configuration
+## Current Setup (Hybrid - Recommended)
 
-| Service | Root | Framework | Public Path |
-|---------|------|-----------|-------------|
-| `frontend` | `frontend/` | `vite` | `/*` (catch-all) |
-| `backend` | `backend/` | `fastapi` | `/api/*`, `/health`, `/docs` |
+- **Frontend**: Deployed on Vercel (static + edge)
+- **Backend**: Deployed on Render/Fly.io/Railway (long-running FastAPI server)
+- **Communication**: Vercel rewrites proxy `/api/*` to external backend
 
-## Bindings (Internal Communication)
+This approach works because the RepoSense backend requires:
+- Long-running processes (git clone takes 30-60s)
+- Persistent local storage for cloned repositories
+- In-memory state management for analysis jobs
+- Background tasks with polling
 
-| From | To | Binding Name | Injected Env Var |
-|------|-----|--------------|------------------|
-| `frontend` | `backend` | `BACKEND_URL` | `BACKEND_URL` |
-| `backend` | `frontend` | `FRONTEND_URL` | `FRONTEND_URL` |
+## Quick Deploy
 
-- Bindings are **internal only** - services communicate via private Vercel network
-- `BACKEND_URL` = `https://<project>.vercel.app/backend` (internal)
-- `FRONTEND_URL` = `https://<project>.vercel.app/frontend` (internal)
-- **Do not set these manually** - Vercel injects them at runtime
+### 1. Deploy Backend to Render
 
-## Current Code Compatibility
+In Render dashboard:
+- **Root**: `backend`
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- **Environment Variables**:
+  - `FRONTEND_URL=https://your-app.vercel.app`
+  - `GEMINI_API_KEY=your_key_here` (optional)
+  - `REPO_BASE_PATH=/tmp/reposense`
+  - `MAX_REPO_SIZE_MB=500`
+  - `CLONE_TIMEOUT_SECONDS=60`
 
-### ✅ Already Compatible
-- **Backend CORS**: Reads `FRONTEND_URL` from env (injected by binding)
-- **Frontend API client**: Updated to use `BACKEND_URL` binding when available
-- **Environment examples**: Documented for both local and Vercel
+### 2. Deploy Frontend to Vercel
 
-### ❌ NOT Compatible (Requires Major Changes)
+In Vercel dashboard:
+- **Root**: `frontend`
+- **Framework Preset**: Vite
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Environment Variables**:
+  - `VITE_API_BASE_URL=https://your-backend.onrender.com/api/v1`
 
-| Issue | Current Implementation | Vercel Limitation |
-|-------|----------------------|-------------------|
+### 3. Vercel Rewrites (Already Configured)
+
+The `vercel.json` is already configured to proxy API requests:
+
+```json
+{
+  "rewrites": [
+    {
+      "source": "/api/v1/(.*)",
+      "destination": "https://your-backend.onrender.com/api/v1/$1"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://your-backend.onrender.com/api/$1"
+    },
+    {
+      "source": "/health",
+      "destination": "https://your-backend.onrender.com/health"
+    },
+    {
+      "source": "/docs",
+      "destination": "https://your-backend.onrender.com/docs"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "https://your-backend.onrender.com/openapi.json"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+```
+
+## Local Development
+
+### Using Root Package.json (Recommended)
+
+```bash
+# Install root dependencies
+npm install
+
+# Start both frontend and backend
+npm run dev
+
+# Or individually:
+npm run dev:web     # Frontend only (Vite on :5173)
+npm run dev:api     # Backend only (FastAPI on :8000)
+```
+
+### Using Vercel CLI (Optional)
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Run locally with Vercel config
+vercel dev
+
+# Frontend: http://localhost:3000
+# API proxied to backend
+```
+
+## Files Configuration
+
+| File | Purpose |
+|------|---------|
+| `vercel.json` | Rewrites config for API proxy to external backend |
+| `frontend/.env.example` | Frontend environment variables |
+| `backend/.env.example` | Backend environment variables |
+| `package.json` | Root workspace with dev scripts |
+
+## Why Not Full Vercel?
+
+The current backend architecture is designed for long-running servers. Moving to serverless requires significant re-architecture:
+
+| Challenge | Current Implementation | Vercel Limitation |
+|-----------|----------------------|-------------------|
 | **Git Clone** | `git clone` to disk (30-60s) | 10s/60s timeout, 512MB /tmp |
 | **Background Tasks** | `BackgroundTasks` + in-memory dicts | No persistent state between invocations |
 | **File Storage** | Local `/tmp/reposense/` | Ephemeral, cleared per invocation |
 | **State Management** | Global `repo_status`, `repo_trees` dicts | Lost on every request |
 | **Long Polling** | Client polls `/status` every 2s | Each poll = new function invocation |
 
-## Required Changes for Full Vercel Support
-
-### Option 1: Externalize State (Recommended)
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Frontend   │────►│  Vercel     │────►│  External   │
-│  (React)    │     │  Functions  │     │  Services   │
-└─────────────┘     └─────────────┘     └─────────────┘
-                           │                    │
-                    ┌──────┴──────┐     ┌──────┴──────┐
-                    ▼             ▼     ▼             ▼
-              ┌─────────┐  ┌─────────┐ ┌─────────┐ ┌─────────┐
-              │ Upstash │  │  Redis  │ │   S3    │ │ GitHub  │
-              │  Queue  │  │ (state) │ │ (files) │ │  API    │
-              └─────────┘  └─────────┘ └─────────┘ └─────────┘
-```
-
-**Changes needed:**
-1. Replace in-memory dicts with **Upstash Redis** or **Vercel KV**
+**To run fully on Vercel**, you would need:
+1. Replace in-memory dicts with **Upstash Redis** / **Vercel KV**
 2. Use **Vercel Queue** / **Upstash QStash** for background jobs
 3. Store cloned repos in **S3/R2** or use **GitHub API** directly
-4. Add `/api/v1/cleanup` cron for expired repos
+4. Add cleanup cron for expired repos
 
-### Option 2: GitHub API Only (No Cloning)
-- Use GitHub REST/GraphQL API to fetch file contents
-- No local disk needed
-- Rate limited (5000 req/hr authenticated)
+## Recommendation
 
-### Option 3: Hybrid (Recommended for MVP)
-- **Frontend on Vercel** (static + edge)
-- **Backend on Render/Fly.io/Railway** (long-running)
-- Use `vercel.json` rewrites to proxy `/api/*` to external backend
-
-## Quick Deploy (Hybrid Approach)
-
-### 1. Deploy Backend to Render
-```bash
-# In Render dashboard:
-# Root: backend
-# Build: pip install -r requirements.txt
-# Start: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-# Env: FRONTEND_URL=https://your-app.vercel.app
-```
-
-### 2. Deploy Frontend to Vercel
-```bash
-# In Vercel dashboard:
-# Root: frontend
-# Framework: Vite
-# Env: VITE_API_BASE_URL=https://your-backend.onrender.com/api/v1
-```
-
-### 3. Update vercel.json for Proxy (if keeping single domain)
-```json
-{
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://your-backend.onrender.com/api/$1"
-    }
-  ]
-}
-```
-
-## Local Development with `vercel dev`
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Run both services locally
-vercel dev
-
-# Frontend: http://localhost:3000
-# Backend:  http://localhost:3000/backend (internal)
-```
-
-## Files Created/Modified
-
-| File | Purpose |
-|------|---------|
-| `vercel.json` | Multi-service config with bindings & rewrites |
-| `backend/api/index.py` | Vercel entrypoint (documents limitations) |
-| `frontend/src/services/api.ts` | Uses `BACKEND_URL` binding |
-| `frontend/.env.example` | Documents binding variable |
-| `backend/.env.example` | Documents binding variable |
-
-## Next Steps (Choose One)
-
-1. **Hybrid (Recommended)**: Keep backend on Render, frontend on Vercel
-2. **Full Vercel**: Implement external state (Redis + Queue + S3)
-3. **GitHub API Only**: Rewrite backend to use GitHub API exclusively
-
-**Recommendation**: Start with **Hybrid**. The current backend architecture is designed for long-running servers. Moving to serverless requires significant re-architecture.
+**Start with Hybrid** (current setup). The backend works well on Render/Fly.io/Railway with minimal cost. Only migrate to full Vercel if you need serverless scaling.

@@ -1,184 +1,231 @@
-# FESTORA — Smart College Event Management System
+# RepoSense
 
-**Powering Every Event. Elevating Every Experience.**
+AI-powered codebase understanding platform. Enter a public GitHub repository URL to analyze its structure, explore files, and get intelligent explanations.
 
-A unified web application for college campus event management replacing scattered announcements, manual registration sheets, uncoordinated spreadsheets, and disconnected finance tracking.
+## Features
+
+- **Repository Analysis**: Clone and analyze any public GitHub repository
+- **Interactive File Explorer**: Browse repository structure with syntax-aware tree view
+- **Code Viewer**: View files with syntax highlighting (Prism.js)
+- **AI File Explanations**: Get detailed explanations of files with functions, classes, and imports
+- **Code Assistant**: Ask questions about the codebase with contextual references
+- **Dark Developer Theme**: Premium dark UI with blue/cyan accents
 
 ## Tech Stack
 
-- **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS
-- **Backend:** Node.js 20 + Express + TypeScript + Prisma + PostgreSQL
-- **Shared:** Zod schemas + TypeScript types
-- **Auth:** JWT with httpOnly cookies
-- **Monorepo:** Turborepo + npm workspaces
+- **Frontend**: React 18 + TypeScript + Vite
+- **Backend**: Python 3.11+ + FastAPI
+- **AI**: Google Gemini 1.5 Flash (optional, with fallback)
+- **Repository Access**: GitPython
+- **Code Analysis**: AST parsing + regex for multiple languages
+
+## Prerequisites
+
+- Python 3.11+
+- Node.js 18+
+- Git
 
 ## Quick Start
 
+### 1. Clone the repository
+
 ```bash
+git clone https://github.com/agrwl-utkarsh/mini.git
+cd mini
+```
+
+### 2. Backend Setup
+
+```bash
+cd backend
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment file
+cp .env.example .env
+
+# Edit .env and add your Gemini API key (optional)
+# GEMINI_API_KEY=your_key_here
+
+# Start backend server
+uvicorn app.main:app --reload --port 8000
+```
+
+### 3. Frontend Setup
+
+```bash
+cd frontend
+
 # Install dependencies
 npm install
 
-# Set up environment
+# Copy environment file
 cp .env.example .env
-# Edit .env with your database URL and JWT secrets
 
-# Generate Prisma client
-npm run db:generate
-
-# Push schema to database
-npm run db:push
-
-# Start development servers
+# Start development server
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:3000` and the API at `http://localhost:4000`.
+### 4. Open the app
+
+Navigate to `http://localhost:5173` in your browser.
+
+## Configuration
+
+### Backend (.env)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GEMINI_API_KEY` | Google Gemini API key for AI features | (empty - uses fallback) |
+| `REPO_BASE_PATH` | Base directory for cloned repos | `/tmp/reposense` |
+| `MAX_REPO_SIZE_MB` | Maximum repository size | `500` |
+| `CLONE_TIMEOUT_SECONDS` | Git clone timeout | `60` |
+| `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:5173` |
+
+### Frontend (.env)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_BASE_URL` | Backend API base URL | `http://localhost:8000/api/v1` |
+
+## Getting a Gemini API Key
+
+1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Add it to `backend/.env` as `GEMINI_API_KEY`
+
+**Note**: The app works without an API key using a rule-based fallback that extracts functions, classes, and imports from the code.
 
 ## Project Structure
 
 ```
-festora/
-├── apps/
-│   ├── web/          # React frontend
-│   └── api/          # Express backend
-├── packages/
-│   └── shared/       # Shared types & schemas
-├── turbo.json        # Turborepo config
-└── package.json      # Root workspace config
+mini/
+├── backend/
+│   ├── app/
+│   │   ├── api/           # API routes
+│   │   ├── models/        # Pydantic models
+│   │   ├── services/      # Business logic
+│   │   │   ├── git_service.py      # Repository cloning
+│   │   │   ├── scanner.py          # Directory scanning
+│   │   │   ├── analyzer.py         # Code analysis (AST)
+│   │   │   ├── explainer.py        # File explanations
+│   │   │   └── assistant.py        # Q&A with context
+│   │   ├── utils/         # Utilities
+│   │   ├── config.py      # Settings
+│   │   └── main.py        # FastAPI entry point
+│   ├── requirements.txt
+│   └── .env.example
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   │   ├── layout/    # Layout components
+│   │   │   ├── landing/   # Landing page
+│   │   │   ├── dashboard/ # Dashboard & summary
+│   │   │   ├── explorer/  # File tree
+│   │   │   ├── viewer/    # Code viewer & tabs
+│   │   │   ├── explainer/ # AI explanations
+│   │   │   ├── assistant/ # Chat panel
+│   │   │   └── ui/        # UI primitives
+│   │   ├── hooks/         # Custom hooks
+│   │   ├── services/      # API client
+│   │   ├── types/         # TypeScript types
+│   │   ├── utils/         # Utilities
+│   │   └── styles/        # CSS styles
+│   ├── package.json
+│   └── vite.config.ts
+│
+└── README.md
 ```
-
-## Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start both frontend and backend |
-| `npm run dev:web` | Frontend only |
-| `npm run dev:api` | Backend only |
-| `npm run build` | Build all packages |
-| `npm run lint` | Lint all packages |
-| `npm run format` | Format with Prettier |
-| `npm run typecheck` | TypeScript check all packages |
-| `npm run test` | Run tests |
-| `npm run db:generate` | Generate Prisma client |
-| `npm run db:push` | Push schema to database |
-| `npm run db:migrate` | Run migrations |
-| `npm run db:seed` | Seed development data |
-| `npm run db:studio` | Open Prisma Studio |
-
-## Core Features
-
-### Event Management (11-step lifecycle)
-1. **Create** - Draft events with details, venues, dates
-2. **Approve** - Faculty approval workflow
-3. **Publish** - Make events visible to students
-4. **Register** - Online registration with waitlists
-5. **QR Ticket** - Auto-generated QR codes
-6. **Verify** - Volunteer check-in with QR scanning
-7. **Attend** - Real-time attendance tracking
-8. **Execute** - Task management for organizers
-9. **Feedback** - Post-event surveys
-10. **Certificates** - PDF certificate generation
-11. **Reports** - Analytics dashboards
-
-### Role-Based Access (7 Roles)
-- **ADMIN** - System administration
-- **FACULTY** - Event approval & oversight
-- **ORGANIZER** - Event creation & management
-- **VOLUNTEER** - Task execution, QR scanning
-- **PARTICIPANT** - Registration, tickets, feedback
-- **SPONSOR** - Sponsorship records view
-- **FINANCE_TEAM** - Budget & expense management
 
 ## API Endpoints
 
-### Auth
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login
-- `POST /api/auth/logout` - Logout
-- `POST /api/auth/refresh` - Refresh access token
-- `GET /api/auth/me` - Get current user
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/repos/analyze` | Start repository analysis |
+| `GET` | `/api/v1/repos/{id}/status` | Check analysis status |
+| `GET` | `/api/v1/repos/{id}/tree` | Get file tree |
+| `GET` | `/api/v1/repos/{id}/files/{path}` | Get file content |
+| `POST` | `/api/v1/repos/{id}/explain` | Explain a file |
+| `POST` | `/api/v1/repos/{id}/ask` | Ask a question |
+| `DELETE` | `/api/v1/repos/{id}` | Clean up repository |
 
-### Events
-- `GET /api/events` - List events (with filters)
-- `GET /api/events/:id` - Get event details
-- `POST /api/events` - Create event
-- `PATCH /api/events/:id` - Update event
-- `POST /api/events/:id/submit-for-approval` - Submit for approval
-- `POST /api/events/:id/approve` - Approve event (Faculty)
-- `POST /api/events/:id/reject` - Reject event (Faculty)
-- `POST /api/events/:id/publish` - Publish event
+## Supported Languages
 
-### Registrations
-- `GET /api/registrations` - List registrations
-- `POST /api/registrations` - Register for event
-- `POST /api/registrations/bulk` - Bulk register (Organizer)
-- `PATCH /api/registrations/:id` - Update registration
-- `POST /api/registrations/check-in` - QR check-in
-- `DELETE /api/registrations/:id` - Cancel registration
+The code analyzer supports extraction of functions, classes, and imports for:
 
-### Health
-- `GET /api/health` - Health check
-- `GET /api/health/ready` - Readiness probe
-- `GET /api/health/live` - Liveness probe
+- Python, JavaScript, TypeScript, React (JSX/TSX)
+- Java, Go, Rust, C++, C, C#
+- PHP, Ruby, Swift, Kotlin, Scala
+- HTML, CSS, SCSS, JSON, YAML, TOML
+- Markdown, Shell, Dockerfile, SQL
+- And more...
 
-## Environment Variables
+## Security
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | Required |
-| `JWT_SECRET` | Access token secret (32+ chars) | Required |
-| `JWT_REFRESH_SECRET` | Refresh token secret (32+ chars) | Required |
-| `JWT_ACCESS_EXPIRY` | Access token expiry | `15m` |
-| `JWT_REFRESH_EXPIRY` | Refresh token expiry | `7d` |
-| `PORT` | API server port | `4000` |
-| `FRONTEND_URL` | Frontend origin for CORS | `http://localhost:3000` |
-| `BCRYPT_ROUNDS` | Password hash rounds | `12` |
-| `NODE_ENV` | Environment | `development` |
-
-## Database Schema
-
-Key models:
-- **User** - 7 roles, profile info, auth
-- **Event** - 11 statuses, full lifecycle
-- **Venue** - Capacity, amenities, availability
-- **Registration** - Waitlists, QR codes, check-in
-- **Task** - Kanban-style with priorities
-- **Budget/Expense** - Multi-currency, approval flow
-- **Sponsor/Sponsorship** - Tier-based, benefits
-- **Feedback** - Typed, rated, anonymous option
-- **Certificate** - Template-based, verifiable
+- No code execution from scanned repositories
+- Path traversal protection on all file operations
+- Repository size and clone time limits
+- Automatic cleanup of temporary directories
+- CORS restricted to configured frontend origin
 
 ## Development
 
+### Backend
+
 ```bash
-# Run frontend only
-npm run dev:web
-
-# Run backend only
-npm run dev:api
-
-# Type checking
-npm run typecheck
-
-# Linting
-npm run lint
-
-# Formatting
-npm run format
-
-# Database operations
-npm run db:studio    # Visual database browser
-npm run db:seed      # Seed test data
-npm run db:migrate   # Create migration files
+cd backend
+source venv/bin/activate
+uvicorn app.main:app --reload
 ```
 
-## Production Build
+### Frontend
 
 ```bash
+cd frontend
+npm run dev
+```
+
+### Linting
+
+```bash
+# Backend
+cd backend && pip install ruff && ruff check .
+
+# Frontend
+cd frontend && npm run lint
+```
+
+## Building for Production
+
+### Backend
+
+```bash
+cd backend
+pip install gunicorn
+gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+### Frontend
+
+```bash
+cd frontend
 npm run build
-npm run start
+# Output in dist/
 ```
 
 ## License
 
-MIT
+MIT License - feel free to use for learning and projects.
+
+## Acknowledgments
+
+- Built as a college mini-project
+- Inspired by GitHub Copilot, Sourcegraph, and other code intelligence tools
+- Uses Prism.js for syntax highlighting
+- Uses Lucide React for icons
