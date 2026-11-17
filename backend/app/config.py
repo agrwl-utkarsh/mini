@@ -1,7 +1,10 @@
 import os
+import tempfile
 from pathlib import Path
 from pydantic_settings import BaseSettings
 from typing import Optional
+
+_default_repo_path = "/tmp/reposense" if os.name != "nt" else os.path.join(tempfile.gettempdir(), "reposense")
 
 
 class Settings(BaseSettings):
@@ -9,7 +12,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = None
 
     # Repository settings
-    REPO_BASE_PATH: str = "/tmp/reposense"
+    REPO_BASE_PATH: str = _default_repo_path
     MAX_REPO_SIZE_MB: int = 500
     CLONE_TIMEOUT_SECONDS: int = 60
     CLEANUP_INTERVAL_MINUTES: int = 60

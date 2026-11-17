@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useOutletContext } from 'react-router-dom';
-import { Zap, Brain, AlertTriangle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
+import React, { useState, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import { Brain } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { api } from '../../services/api';
 import { MessageList } from './MessageList';
@@ -9,13 +8,12 @@ import { MessageInput } from './MessageInput';
 import type { ChatMessage, AskResponse } from '../../types';
 
 interface ChatPanelProps {
-  repoId?: string;
+  repoId?: string | null;
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId }) => {
   const { repoId: urlRepoId } = useParams<{ repoId: string }>();
   const effectiveRepoId = repoId || urlRepoId;
-  const context = useOutletContext<{ closeRightPanel: () => void }>();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -88,7 +86,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId }) => {
         <div className="flex items-center gap-2">
           {fallbackMode && (
             <Badge variant="warning" size="sm" dot>
-              <span className="w-3 h-3 mr-1 bg-current rounded-full" /> Fallback Mode
+              Fallback Mode
             </Badge>
           )}
         </div>
@@ -111,7 +109,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ repoId }) => {
       <MessageList
         messages={messages}
         loading={loading}
-        onCopyCode={() => {}}
       />
 
       {/* Input */}

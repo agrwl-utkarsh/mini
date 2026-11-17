@@ -156,11 +156,11 @@ interface FrameworkBadgeProps {
 }
 
 const FrameworkBadge: React.FC<FrameworkBadgeProps> = ({ framework }) => {
-  const confidenceColor =
+  const confidenceColor: 'success' | 'warning' | 'info' =
     framework.confidence > 0.8 ? 'success' : framework.confidence > 0.5 ? 'warning' : 'info';
 
   return (
-    <Badge variant={confidenceColor as any} size="sm" dot>
+    <Badge variant={confidenceColor} size="sm" dot>
       {framework.name}
       <span className="text-xs opacity-75 ml-1">({Math.round(framework.confidence * 100)}%)</span>
     </Badge>

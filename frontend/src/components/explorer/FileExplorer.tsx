@@ -9,40 +9,50 @@ interface ExplorerContext {
   closeRightPanel: () => void;
 }
 
-export const FileExplorer: React.FC = () => {
+interface FileExplorerProps {
+  onFileSelect?: (path: string) => void;
+  selectedPath?: string;
+}
+
+export const FileExplorer: React.FC<FileExplorerProps> = ({ onFileSelect, selectedPath: propSelectedPath }) => {
   const { repoId } = useParams<{ repoId: string }>();
-  const context = useOutletContext<ExplorerContext>();
+  const context = useOutletContext<ExplorerContext | undefined>();
   const [tree, setTree] = useState<TreeNode[]>([]);
-  const [selectedPath, setSelectedPath] = useState<string>('');
+  const [localSelectedPath, setLocalSelectedPath] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
-  // Load tree on mount
-  useEffect(() => {
-    if (!repoId) return;
-    loadTree();
-  }, [repoId]);
+  const selectedPath = propSelectedPath !== undefined ? propSelectedPath : localSelectedPath;
 
-  const loadTree = async () => {
+  const loadTree = useCallback(async () => {
     if (!repoId) return;
     setLoading(true);
     try {
       const response: RepoTreeResponse = await api.getRepoTree(repoId);
       setTree(response.tree);
-    } catch (err) {
+    } catch {
       // Error handled by FileTree component
     } finally {
       setLoading(false);
     }
-  };
+  }, [repoId]);
+
+  // Load tree on mount
+  useEffect(() => {
+    if (!repoId) return;
+    loadTree();
+  }, [repoId, loadTree]);
 
   const handleSelect = useCallback((path: string) => {
-    setSelectedPath(path);
+    setLocalSelectedPath(path);
+    if (onFileSelect) {
+      onFileSelect(path);
+    }
     context?.openRightPanel('explainer');
-  }, [context]);
+  }, [context, onFileSelect]);
 
   const handleRefresh = useCallback(() => {
     loadTree();
-  }, [repoId]);
+  }, [loadTree]);
 
   if (!repoId) return null;
 

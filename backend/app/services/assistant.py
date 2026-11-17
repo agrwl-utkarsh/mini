@@ -1,9 +1,18 @@
 import os
-import google.generativeai as genai
 from pathlib import Path
 from typing import List, Optional, Dict, Any
-import tiktoken
 import re
+
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None
+
+try:
+    import tiktoken
+    _tiktoken_encoding = tiktoken.get_encoding("cl100k_base")
+except Exception:
+    _tiktoken_encoding = None
 
 from app.config import settings
 from app.services.scanner import RepoScanner
@@ -15,12 +24,12 @@ from app.models.repo import TreeNode
 class RepoAssistant:
     def __init__(self):
         self.model = None
-        self.encoding = tiktoken.get_encoding("cl100k_base")
+        self.encoding = _tiktoken_encoding
         self._init_gemini()
 
     def _init_gemini(self):
         """Initialize Gemini if API key is available."""
-        if settings.GEMINI_API_KEY:
+        if settings.GEMINI_API_KEY and genai is not None:
             try:
                 genai.configure(api_key=settings.GEMINI_API_KEY)
                 self.model = genai.GenerativeModel('gemini-1.5-flash')
@@ -29,13 +38,18 @@ class RepoAssistant:
                 self.model = None
 
     def _count_tokens(self, text: str) -> int:
-        return len(self.encoding.encode(text))
+        if self.encoding:
+            return len(self.encoding.encode(text))
+        return len(text) // 4
 
     def _truncate_content(self, content: str, max_tokens: int) -> str:
-        tokens = self.encoding.encode(content)
-        if len(tokens) <= max_tokens:
-            return content
-        return self.encoding.decode(tokens[:max_tokens])
+        if self.encoding:
+            tokens = self.encoding.encode(content)
+            if len(tokens) <= max_tokens:
+                return content
+            return self.encoding.decode(tokens[:max_tokens])
+        max_chars = max_tokens * 4
+        return content[:max_chars] if len(content) > max_chars else content
 
     def _find_relevant_files(self, repo_path: Path, question: str, tree: List[TreeNode], max_files: int = 5) -> List[tuple[str, str, str]]:
         """Find files relevant to the question using keyword matching."""
@@ -98,13 +112,14 @@ class RepoAssistant:
         except Exception:
             return None
 
-    def _build_fallback_answer(self, question: str, relevant_files: List[tuple]) -> tuple[str, List[FileReference]]:
+    def _build_fallback_answer(self, question: str, relevant_files: List[tuple]) -> tuple[str, List[FileReference], bool]:
         """Generate a basic answer without AI."""
         if not relevant_files:
             return (
                 "I couldn't find any relevant files for your question. "
                 "Try asking about specific files, functions, or components in the repository.",
-                []
+                [],
+                True
             )
 
         answer_parts = [
@@ -125,7 +140,7 @@ class RepoAssistant:
             "Add a GEMINI_API_KEY to enable intelligent code understanding.*"
         )
 
-        return "\n".join(answer_parts), references
+        return "\n".join(answer_parts), references, True
 
     def ask(self, repo_path: Path, question: str, history: List[ChatMessage], tree: List[TreeNode]) -> tuple[str, List[FileReference], bool]:
         """

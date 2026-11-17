@@ -9,6 +9,7 @@ interface FileTabsProps {
   activeTab: string | null;
   onTabChange: (path: string) => void;
   onTabClose: (path: string) => void;
+  onMaximize?: (path: string) => void;
 }
 
 const MAX_VISIBLE_TABS = 8;

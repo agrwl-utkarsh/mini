@@ -16,7 +16,7 @@ def validate_path(base_path: Path, requested_path: str) -> Optional[Path]:
         requested = (base / requested_path).resolve()
 
         # Check if requested path is within base
-        if not str(requested).startswith(str(base)):
+        if not requested.is_relative_to(base):
             return None
 
         # Check if path exists

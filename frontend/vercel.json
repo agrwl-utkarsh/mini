@@ -1,0 +1,32 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/api/v1/(.*)",
+      "destination": "https://reposense-backend.onrender.com/api/v1/$1"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://reposense-backend.onrender.com/api/$1"
+    },
+    {
+      "source": "/health",
+      "destination": "https://reposense-backend.onrender.com/health"
+    },
+    {
+      "source": "/docs",
+      "destination": "https://reposense-backend.onrender.com/docs"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "https://reposense-backend.onrender.com/openapi.json"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
